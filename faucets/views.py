@@ -25,7 +25,11 @@ class LogViewSet(viewsets.ModelViewSet):
                 ip = request.META.get('REMOTE_ADDR')
             to_addr = request.data.get('wallet_address')
 
-            last_record = Log.objects.filter(Q(ip_address=ip) | Q(wallet_address=to_addr)).latest('created_at')
+            try:
+                last_record = Log.objects.filter(Q(ip_address=ip) | Q(wallet_address=to_addr)).latest('created_at')
+            except Log.DoesNotExist:
+                last_record = None
+                
             if last_record and (timezone.now() - last_record.created_at > timedelta(minutes=1)):
                 w3 = Web3(Web3.HTTPProvider(settings.INFURA_ENDPOINT))
                 mnemo = Mnemonic('english')
